@@ -1,9 +1,0 @@
-[theme]
-base="light"
-primaryColor="darkblue"
-backgroundColor="#fff"
-textColor="gray"
-font="sans-serif"
-
-[global]
-disableWidgetStateDuplicationWarning = false
