@@ -1,0 +1,14 @@
+{
+    "model_option": false,
+    "model_option2": false,
+    "model_option3": false,
+    "replacements_file": "replacements.csv",
+    "replace_words": true,
+    "ja_split": true,
+    "comma_split": false,
+    "min_split": 10,
+    "max_split": 40,
+    "dot_management_file": "dot_manager.csv",
+    "deepall": false,
+    "language_result": "Japanese (ja)"
+}
