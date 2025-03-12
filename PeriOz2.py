@@ -25,37 +25,39 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
 # 各ユーザーのAppDataフォルダのパス（PeriOz2フォルダ）
-appdata_path = os.path.join(os.getenv('APPDATA'), 'PeriOz2')
+
 data_src_path = os.path.join(script_dir, 'Data')
 
 # AppData\Roaming内にPeriOz2フォルダが存在しない場合は作成
-if not os.path.exists(appdata_path):
-    os.makedirs(appdata_path, exist_ok=True)  # AppDataにPeriOz2フォルダを作成
 
-# ディレクトリ内のすべてのファイルとサブディレクトリを再帰的にチェックしてコピー
-for item in os.listdir(data_src_path):
-    src_path = os.path.join(data_src_path, item)
-    dest_path = os.path.join(appdata_path, item)
 
-    # フォルダの場合は再帰的にコピー（存在しない場合）
-    if os.path.isdir(src_path):
-        if not os.path.exists(dest_path):
-            shutil.copytree(src_path, dest_path)  # ディレクトリを再帰的にコピー
-    # ファイルの場合は個別にコピー（存在しない場合）
-    else:
-        if not os.path.exists(dest_path):
-            shutil.copy2(src_path, dest_path)  # 個別ファイルをコピー
-
-#print("データのコピーが完了しました")
 
 #appdataフォルダのパスを再設定
-#data_folder = os.path.join(os.getenv('APPDATA'), 'PeriOz2')
+import tempfile
+import os
+import shutil
+import uuid
+
+SETTINGS_FILE = "settings.json"
 
 
+
+
+# 初回アクセス時にセッションIDを作成
+if "user_id" not in st.session_state:
+    st.session_state.user_id = str(uuid.uuid4())  # ランダムなセッションID
+
+temp_dir = os.path.join(tempfile.gettempdir(), f"session_{st.session_state.user_id}")
+os.makedirs(temp_dir, exist_ok=True)
 
 if 'setpath' not in st.session_state:
-    st.session_state.setpath="settings.json"
+    st.session_state.setpath=os.path.join(temp_dir,"settings.json")
 
+if not os.path.exists(st.session_state.setpath):
+    shutil.copy(SETTINGS_FILE, st.session_state.setpath)
+
+
+##ここから、ロード開始。
 if 'language_result' not in st.session_state:
     st.session_state.language_result=co.initialize_load('language_result')
 
@@ -155,6 +157,6 @@ if 'large_model' not in st.session_state:
 if 'spacy_model' not in st.session_state:
     st.session_state.spacy_model=None
 
-#co.load_multi()
+co.load_multi()
 
 co.main()
