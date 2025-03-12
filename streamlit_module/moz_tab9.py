@@ -368,8 +368,8 @@ def tab9_main(nlp,punctuation_model,json_file, input_srt_file, deep_punc_progres
  
 
     # 前処理
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    temp_dir = os.path.join(tempfile.gettempdir(), f"tempdir_{timestamp}")
+    timestamp_patch = datetime.now().strftime("%Y%m%d%H%M%S")
+    temp_dir = os.path.join(tempfile.gettempdir(), f"session_{st.session_state.user_id}",f"{timestamp_patch}")
     os.makedirs(temp_dir, exist_ok=True)
 
 
