@@ -158,13 +158,22 @@ def seconds_to_timestamp(seconds, is_srt=True):
         result_timestamps.append((current_start_time, elapsed_time))
 
     return result_segments, result_timestamps'''
-def split_and_merge_short_segments(text, start_time, end_time, min_length=10, max_length=30):
-    # 読点で分割
+def split_and_merge_short_segments(text, start_time, end_time, max_length=30,min_length=10):
+
+    '''ルール'''
+    '''
+    10文字以下を独立させることは認めない。最初も、最後も。
+    10文字以下のセグメントは前と繋げる。
+    10文字以上、25文字以下に必ず収まるわけではない。5、5、25などは30文字になる。
+    '''
     lang_tail=co.extract_short_name(st.session_state.language_result)
+    SENTINEL = ""
+    if lang_tail != "ja":
+        text = re.sub(r'(?<=\d),(?=\d)',f"{SENTINEL}",text)
     if lang_tail=='ja':
-        sub_segments = re.split(r'(?<=、)', text)
+        sub_segments = [s for s in re.split(r'(?<=、)', text) if s.strip()]
     else:
-        sub_segments = re.split(r'(?<=,)', text)
+        sub_segments = [s.replace(f"{SENTINEL}",",") for s in re.split(r'(?<=,)', text) if s.strip()]
     total_length = sum(len(seg) for seg in sub_segments)
     duration = end_time - start_time
 
@@ -176,7 +185,7 @@ def split_and_merge_short_segments(text, start_time, end_time, min_length=10, ma
     current_seg = ""
     current_start_time = start_time
     elapsed_time = start_time
-
+    print(sub_segments)
     for sub_seg in sub_segments:
         segment_length = len(sub_seg)
         proportion = segment_length / total_length
@@ -184,18 +193,28 @@ def split_and_merge_short_segments(text, start_time, end_time, min_length=10, ma
         new_end_time = elapsed_time + segment_duration
 
         # 最小文字数以下の場合は次のセグメントとマージ
-        if len(current_seg) + len(sub_seg) <= max_length:
+        if len(current_seg) + len(sub_seg) <= min_length:
             current_seg += sub_seg
         else:
-            # max_lengthを超えたらセグメント確定
-            if len(current_seg) < min_length:
-                # 最小文字数ルール優先: 次のセグメントをマージ
+            
+            if len(sub_seg) < min_length:
                 current_seg += sub_seg
-                elapsed_time = new_end_time  # タイムスタンプを進める
+                elapsed_time = new_end_time
+            elif len(current_seg) < max_length:
+                if len(current_seg)+len(sub_seg)< max_length:
+                    current_seg += sub_seg
+                    elapsed_time = new_end_time  # タイムスタンプを進める
+                else:
+                    if current_seg.strip():
+                        result_segments.append(current_seg)
+                        result_timestamps.append((current_start_time, elapsed_time))
+                    current_seg = sub_seg
+                    current_start_time = elapsed_time
             else:
                 # 通常の分割処理
-                result_segments.append(current_seg)
-                result_timestamps.append((current_start_time, elapsed_time))
+                if current_seg.strip():
+                    result_segments.append(current_seg)
+                    result_timestamps.append((current_start_time, elapsed_time))
                 current_seg = sub_seg
                 current_start_time = elapsed_time
 
@@ -204,17 +223,9 @@ def split_and_merge_short_segments(text, start_time, end_time, min_length=10, ma
     # 最後のセグメントも処理
     if current_seg.strip():
         result_segments.append(current_seg)
-        result_timestamps.append((current_start_time, elapsed_time))
+        result_timestamps.append((current_start_time, end_time))
 
-    # 最後の要素が最小文字数以下の場合、1つ前のセグメントに結合
-    if len(result_segments) > 1 and len(result_segments[-1]) < min_length:
-        # 結合する
-        result_segments[-2] += result_segments[-1]
-        result_timestamps[-2] = (result_timestamps[-2][0], result_timestamps[-1][1])  # 終了時刻を更新
-        # 最後のセグメントを削除
-        result_segments.pop()
-        result_timestamps.pop()
-
+    
     return result_segments, result_timestamps
 # SRT/VTTファイルを読み込み、タイムスタンプとテキストを同時に分割・マージする
 def split_srt_vtt_by_comma_and_merge(file_path, max_length=70, min_length=10):
@@ -245,7 +256,7 @@ def split_srt_vtt_by_comma_and_merge(file_path, max_length=70, min_length=10):
             text = ''.join(buffer[2:]).strip()
             
             # タイムスタンプとテキストを同時に分割・マージ
-            segments, timestamps = split_and_merge_short_segments(text, start_time, end_time, min_length, max_length)
+            segments, timestamps = split_and_merge_short_segments(text, start_time, end_time, max_length, min_length)
             
             # 各セグメントにタイムスタンプを割り当てて出力
             for segment, (seg_start_time, seg_end_time) in zip(segments, timestamps):
@@ -305,7 +316,7 @@ def true_comma_split(file_path, max_length=70, min_length=10):
             text = ''.join(buffer[2:]).strip()
             
             # タイムスタンプとテキストを同時に分割・マージ
-            segments, timestamps = split_and_merge_short_segments(text, start_time, end_time, min_length, max_length)
+            segments, timestamps = split_and_merge_short_segments(text, start_time, end_time,  max_length,min_length)
             
             # 各セグメントにタイムスタンプを割り当てて出力
             for segment, (seg_start_time, seg_end_time) in zip(segments, timestamps):
