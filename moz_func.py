@@ -461,8 +461,13 @@ def process_file(input_file,replace_word,browseropen=True,filename="sample.html"
 
     with open(output_file,"r",encoding="utf-8") as f:
         for_text=f.read()
-
-
+    # html表示用outputを常に2桁に統一。(1桁のほうがいいのかな。。。)
+    output= re.sub(
+        r'(^|\s)(\d):(\d{2}:\d{2}[,.]\d{3})',
+        lambda m: f"{m.group(1)}0{m.group(2)}:{m.group(3)}",
+        output,
+        flags=re.MULTILINE
+    )
 
     if input_file.endswith(".srt"):
         segment_pattern = r'(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3})\n(.*?)(?=\n\d+\n|\Z)'
@@ -551,7 +556,7 @@ def correct_srt_format_from_text(text):
     # 秒の2桁＋3桁のミリ秒の間にカンマを追加する
     content = re.sub(r'(\d{1,2}:\d{2}:\d{2})(\d{3})', r'\1,\2', content)
     
-    pattern = re.compile(r'(\d{1,4})\^*(\d{1，2}:\d{2}:\d{2},\d{3})\^*-->\^*(\d{1，2}:\d{2}:\d{2},\d{3})')
+    pattern = re.compile(r'(\d{1,4})\^*(\d{2}:\d{2}:\d{2},\d{3})\^*-->\^*(\d{2}:\d{2}:\d{2},\d{3})')
     matches = pattern.findall(content)
     segments = pattern.split(content)
     #print(f"segments:{segments}")
@@ -592,10 +597,10 @@ def correct_vtt_format_from_text(text):
         # カンマが抜けたタイムスタンプ (例: 00:00:00123) を修正
     # 秒の2桁＋3桁のミリ秒の間にカンマを追加する
     content = re.sub(r'(\d{1,2}:\d{2}:\d{2})(\d{3})', r'\1.\2', content)
-    pattern = re.compile(r'(\d{1,4})\^*(\d{1}:\d{2}:\d{2}\.\d{3})\^*-->\^*(\d{1}:\d{2}:\d{2}\.\d{3})')
+    pattern = re.compile(r'(\d{1,4})\^*(\d{2}:\d{2}:\d{2}\.\d{3})\^*-->\^*(\d{2}:\d{2}:\d{2}\.\d{3})')
     matches = pattern.findall(content)
     if not matches:
-        pattern = re.compile(r'(\d{1,4})\^*(\d{2}:\d{2}:\d{2}\.\d{3})\^*-->\^*(\d{2}:\d{2}:\d{2}\.\d{3})')
+        pattern = re.compile(r'(\d{1,4})\^*(\d{1}:\d{2}:\d{2}\.\d{3})\^*-->\^*(\d{1}:\d{2}:\d{2}\.\d{3})')
         matches = pattern.findall(content)
 
     segments = pattern.split(content)
@@ -1739,4 +1744,5 @@ def new_process_file(input_files,replace_word):
     # return output_html, [output_file, docx_file], output_file
 
     return output_excels,output_txts,output_srts
+
 
