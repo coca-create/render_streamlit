@@ -551,7 +551,7 @@ def correct_srt_format_from_text(text):
     # 秒の2桁＋3桁のミリ秒の間にカンマを追加する
     content = re.sub(r'(\d{1,2}:\d{2}:\d{2})(\d{3})', r'\1,\2', content)
     
-    pattern = re.compile(r'(\d{1,4})\^*(\d{2}:\d{2}:\d{2},\d{3})\^*-->\^*(\d{2}:\d{2}:\d{2},\d{3})')
+    pattern = re.compile(r'(\d{1,4})\^*(\d{1，2}:\d{2}:\d{2},\d{3})\^*-->\^*(\d{1，2}:\d{2}:\d{2},\d{3})')
     matches = pattern.findall(content)
     segments = pattern.split(content)
     #print(f"segments:{segments}")
@@ -1739,3 +1739,4 @@ def new_process_file(input_files,replace_word):
     # return output_html, [output_file, docx_file], output_file
 
     return output_excels,output_txts,output_srts
+
