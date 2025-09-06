@@ -547,7 +547,10 @@ def correct_srt_format_from_text(text):
         content = re.sub(pattern, replacement, content)    
 
 
-
+    # カンマが抜けたタイムスタンプ (例: 00:00:00123) を修正
+    # 秒の2桁＋3桁のミリ秒の間にカンマを追加する
+    content = re.sub(r'(\d{1,2}:\d{2}:\d{2})(\d{3})', r'\1,\2', content)
+    
     pattern = re.compile(r'(\d{1,4})\^*(\d{2}:\d{2}:\d{2},\d{3})\^*-->\^*(\d{2}:\d{2}:\d{2},\d{3})')
     matches = pattern.findall(content)
     segments = pattern.split(content)
@@ -585,7 +588,10 @@ def correct_vtt_format_from_text(text):
     #print(content)
     for pattern, replacement in patterns_replacements:
         content = re.sub(pattern, replacement, content)    
-    
+
+        # カンマが抜けたタイムスタンプ (例: 00:00:00123) を修正
+    # 秒の2桁＋3桁のミリ秒の間にカンマを追加する
+    content = re.sub(r'(\d{1,2}:\d{2}:\d{2})(\d{3})', r'\1.\2', content)
     pattern = re.compile(r'(\d{1,4})\^*(\d{1}:\d{2}:\d{2}\.\d{3})\^*-->\^*(\d{1}:\d{2}:\d{2}\.\d{3})')
     matches = pattern.findall(content)
     if not matches:
@@ -1731,4 +1737,5 @@ def new_process_file(input_files,replace_word):
 
 
     # return output_html, [output_file, docx_file], output_file
+
     return output_excels,output_txts,output_srts
